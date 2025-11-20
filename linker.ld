@@ -1,6 +1,6 @@
 ENTRY(_start)
 SECTIONS{
-  . = 0x40100000;                 /* safe load addr for virt */
+  . = 0x80000000;                 /* safe load addr for virt */
   .text : { *(.text*) }
   .rodata : { *(.rodata*) }
   .data : { *(.data*) }
