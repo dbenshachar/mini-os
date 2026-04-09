@@ -18,6 +18,7 @@ void backspace() {
 }
 
 void kmain(void){
+    init_commands();
     init_malloc();
 
     printstr("\n> ");
