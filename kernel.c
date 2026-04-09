@@ -1,48 +1,46 @@
 #include <stdint.h>
-#include "commands.h"
+
+#include "src/io.h"
 
 int done = 0;
-char cmdbuf[256];
+char cmdbuffer[256];
 uint8_t cmdlen = 0;
 
 void new_line() {
-    cmdbuf[0] = '\0';
+    cmdbuffer[0] = '\0';
     cmdlen = 0;
 }
 
 void backspace() {
-    cmdbuf[cmdlen] = '\0';
+    cmdbuffer[cmdlen] = '\0';
     cmdlen = (cmdlen > 0) ? cmdlen - 1 : 0;
 }
 
-/*Execute by running:
-chmod +x run.bash && ./run.bash
-*/
 void kmain(void){
-    fs_init();
-    fs_return();
-    puts("\n> ");
+    printstr("\n> ");
     
-    while (1)
+    int done = 0;
+
+    while (!done)
     {
-        int c = getc();
+        const char c = readchar();
         if (c == '\n' || c == '\r') {
-            cmdbuf[cmdlen] = '\0';
+            cmdbuffer[cmdlen] = '\0';
             cmdlen++;
 
-            done = !execute(cmdbuf);
-            if (done) {puts("\nTried to quit!");}
+            // done = !execute(cmdbuffer);
+            if (done) { printstr("\nTried to quit!"); }
             new_line();
-            puts("\n> ");
+            printstr("\n> ");
             continue;
         }
         if (c ==0x7F || c =='\b') {
             backspace();
-            puts("\b \b");
+            printstr("\b \b");
             continue;
         }
-        cmdbuf[cmdlen] = c;
+        cmdbuffer[cmdlen] = c;
         cmdlen++;
-        putc((char)c);
+        printchar((long) c);
     }
 }
