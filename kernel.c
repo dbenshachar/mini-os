@@ -29,7 +29,7 @@ void kmain(void){
             cmdbuffer[cmdlen] = '\0';
             cmdlen++;
 
-            int done = !execute(cmdbuffer);
+            int done = execute(cmdbuffer);
             if (done) { printstr("\nShutting down...\n"); return; }
             new_line();
             printstr("\n> ");

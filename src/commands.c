@@ -40,5 +40,5 @@ int execute(char* cmd) {
     const char *exec_command = params[0];
     if (strcmp(exec_command, "quit")) { return 1; }
     printstr("\nInvalid command!");
-    return 1;
+    return 0;
 }
