@@ -1,6 +1,7 @@
 #include <stdint.h>
 
 #include "src/io.h"
+#include "src/commands.h"
 
 int done = 0;
 char cmdbuffer[256];
@@ -28,8 +29,8 @@ void kmain(void){
             cmdbuffer[cmdlen] = '\0';
             cmdlen++;
 
-            // done = !execute(cmdbuffer);
-            if (done) { printstr("\nTried to quit!"); }
+            done = !execute(cmdbuffer);
+            if (done) { printstr("\nShutting down...\n"); return; }
             new_line();
             printstr("\n> ");
             continue;
