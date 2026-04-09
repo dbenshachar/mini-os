@@ -3,7 +3,6 @@
 #include "src/io.h"
 #include "src/commands.h"
 
-int done = 0;
 char cmdbuffer[256];
 uint8_t cmdlen = 0;
 
@@ -19,17 +18,15 @@ void backspace() {
 
 void kmain(void){
     printstr("\n> ");
-    
-    int done = 0;
 
-    while (!done)
+    while (1)
     {
         const char c = readchar();
         if (c == '\n' || c == '\r') {
             cmdbuffer[cmdlen] = '\0';
             cmdlen++;
 
-            done = !execute(cmdbuffer);
+            int done = !execute(cmdbuffer);
             if (done) { printstr("\nShutting down...\n"); return; }
             new_line();
             printstr("\n> ");
