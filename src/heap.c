@@ -14,7 +14,7 @@ static Block *freeList = (Block *)heap_pool;
 void init_malloc() {
 	freeList->size = HEAP_SIZE - sizeof(Block);
 	freeList->free = 1;
-	freeList->next = 0;
+	freeList->next = nullptr;
 }
 
 void *malloc(size_t size) {
@@ -34,7 +34,7 @@ void *malloc(size_t size) {
 		}
 		curr = curr->next;
 	}
-	return 0;
+	return nullptr;
 }
 
 void free(void *ptr) {

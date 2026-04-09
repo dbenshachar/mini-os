@@ -2,6 +2,7 @@
 
 #include "src/io.h"
 #include "src/commands.h"
+#include "src/heap.h"
 
 char cmdbuffer[256];
 uint8_t cmdlen = 0;
@@ -17,6 +18,8 @@ void backspace() {
 }
 
 void kmain(void){
+    init_malloc();
+
     printstr("\n> ");
 
     while (1)
