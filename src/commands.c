@@ -1,6 +1,7 @@
 #include "io.h"
 #include "strings.h"
 #include "commands.h"
+#include "heap.h"
 #include "program/syscalls.h"
 #include "program/logic.h"
 
@@ -437,6 +438,31 @@ int execute(char* cmd) {
             printstr("\nexec: execution failed");
         }
 
+        return 0;
+    }
+    if (strcmp(exec_command, "alloc")) {
+        if (param_count < 2) {
+            printstr("\nalloc: size not provided");
+            return 0;
+        }
+
+        const char *p = params[1];
+        size_t n = 0;
+
+        while (*p) {
+            if (*p < '0' || *p > '9') {
+                printstr("\nalloc: invalid size");
+                return 0;
+            }
+
+            n = n * 10 + (*p - '0');
+            p++;
+        }
+
+        void *mem = malloc(n);
+        free(mem);
+
+        printstr("\nalloc complete");
         return 0;
     }
 
