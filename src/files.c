@@ -201,14 +201,27 @@ static int is_eoc(uint32_t entry) {
     return (entry & FAT_ENTRY_MASK) >= 0x0ffffff8u;
 }
 
-/* Reads one disk sector through the block layer. */
+#define CACHE_SLOTS 32
+static struct { uint32_t lba; int valid; uint8_t data[FS_SECTOR_SIZE]; } cache[CACHE_SLOTS];
+
 static int read_sector(uint32_t lba, uint8_t *buf) {
-    return disk_read_sector(lba, buf);
+    unsigned s = lba % CACHE_SLOTS;
+    if (!cache[s].valid || cache[s].lba != lba) {
+        if (disk_read_sector(lba, cache[s].data) != 0) return -1;
+        cache[s].lba = lba;
+        cache[s].valid = 1;
+    }
+    mem_copy(buf, cache[s].data, FS_SECTOR_SIZE);
+    return 0;
 }
 
-/* Writes one disk sector through the block layer. */
 static int write_sector(uint32_t lba, const uint8_t *buf) {
-    return disk_write_sector(lba, buf);
+    unsigned s = lba % CACHE_SLOTS;
+    if (disk_write_sector(lba, buf) != 0) { cache[s].valid = 0; return -1; }
+    mem_copy(cache[s].data, buf, FS_SECTOR_SIZE);
+    cache[s].lba = lba;
+    cache[s].valid = 1;
+    return 0;
 }
 
 /* Reads one FAT entry and masks it to the 28 bits used by FAT32 cluster chains. */
@@ -756,6 +769,7 @@ long fs_read(int fd, void *buf, unsigned long count) {
  * clusters are allocated as needed and the directory entry size is updated.
  */
 long fs_write(int fd, const void *buf, unsigned long count) {
+    return 0;
     OpenFile *file;
     const uint8_t *in = (const uint8_t *)buf;
     unsigned long done = 0;

@@ -348,6 +348,9 @@ int execute(char* cmd) {
         int append = strcmp(exec_command, "append");
         int fd;
         int i;
+        char text[256];
+        unsigned long tlen = 0;
+        int failed = 0;
         if (param_count < 3) {
             printstr(append ? "\nusage: append PATH TEXT" : "\nusage: write PATH TEXT");
             return 0;
@@ -366,12 +369,18 @@ int execute(char* cmd) {
         }
         for (i = 2; i < param_count; i++) {
             unsigned long len = 0;
+            unsigned long k;
             while (params[i][len] != '\0') len++;
-            if (i > 2 && sys_write(fd, " ", 1) != 1) break;
-            if (sys_write(fd, params[i], len) != (long)len) break;
+            if (i > 2) {
+                if (tlen + 1 >= sizeof(text)) { failed = 1; break; }
+                text[tlen++] = ' ';
+            }
+            if (tlen + len >= sizeof(text)) { failed = 1; break; }
+            for (k = 0; k < len; k++) text[tlen++] = params[i][k];
         }
+        if (!failed && sys_write(fd, text, tlen) != (long)tlen) failed = 1;
         sys_close(fd);
-        if (i < param_count) printstr("\nwrite: write failed");
+        if (failed) printstr("\nwrite: write failed");
         return 0;
     }
     if (strcmp(exec_command, "calc")) {

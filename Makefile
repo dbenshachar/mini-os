@@ -11,6 +11,9 @@ LDFLAGS = -nostdlib -T linker.ld
 SRCS = $(wildcard src/*.c) $(wildcard src/program/*.c) kernel.c
 OBJS = out/start.o $(patsubst %.c,out/%.o,$(SRCS))
 
+ACCEL ?= tcg
+CPU   ?= cortex-a57
+
 all: run
 
 kernel.bin: kernel.elf
@@ -42,6 +45,14 @@ run: kernel.bin
 	   -kernel kernel.elf \
 	   -drive if=none,file=disk.img,format=raw,id=hd0 \
 	   -device virtio-blk-device,drive=hd0
+
+bench: kernel.bin
+	$(QEMU) -M virt -accel $(ACCEL) -cpu $(CPU) -m 128M -smp 1 \
+	   -nodefaults -nographic -monitor none -serial stdio \
+	   -kernel kernel.elf \
+	   -drive if=none,file=disk.img,format=raw,id=hd0 \
+	   -device virtio-blk-device,drive=hd0 \
+	   -action shutdown=poweroff
 
 clean:
 	rm -rf out/ kernel.elf kernel.bin clean_usage

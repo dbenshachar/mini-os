@@ -68,9 +68,11 @@ int exec(const char* path) {
     if (fd < 0) return -1;
 
     char cmd[EXEC_BUF_SIZE];
+    char tmp[EXEC_BUF_SIZE];
     char chunk[128];
     int len = 0;
     long n;
+    int pending_while = 0;
 
     while ((n = fs_read(fd, chunk, sizeof(chunk))) > 0) {
         for (long i = 0; i < n; i++) {
@@ -78,6 +80,25 @@ int exec(const char* path) {
 
             if (c == ';') {
                 cmd[len] = '\0';
+                if (pending_while > 0) {
+                    for (int r = 0; r < pending_while - 1; r++) {
+                        for (int j = 0; j <= len; j++) tmp[j] = cmd[j];
+                        execute(tmp);
+                    }
+                    pending_while = 0;
+                } else if (len > 6 && cmd[0] == 'w' && cmd[1] == 'h' && cmd[2] == 'i' && cmd[3] == 'l' && cmd[4] == 'e' && cmd[5] == ' ') {
+                    int k = 6;
+                    int v = 0;
+                    while (cmd[k] >= '0' && cmd[k] <= '9') {
+                        v = v * 10 + (cmd[k] - '0');
+                        k++;
+                    }
+                    if (k > 6 && cmd[k] == '\0') {
+                        pending_while = v;
+                        len = 0;
+                        continue;
+                    }
+                }
                 execute(cmd);
                 len = 0;
             } else if (len < EXEC_BUF_SIZE - 1) {
