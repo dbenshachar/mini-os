@@ -1,0 +1,15 @@
+# calc evaluates integer arithmetic, handles spacing/precedence, and rejects invalid forms.
+COMMANDS
+calc 1+2*3
+calc (10 - 4) / 3
+calc 5-9
+calc 1/0
+calc 1.5
+exit
+
+EXPECT
+\n7\n> calc (10 - 4) / 3
+\n2\n> calc 5-9
+\n-4\n> calc 1/0
+calc: invalid expression
+Shutting down...

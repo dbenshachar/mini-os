@@ -1,7 +1,8 @@
 #include "io.h"
 #include "strings.h"
 #include "commands.h"
-#include "syscalls.h"
+#include "program/syscalls.h"
+#include "program/logic.h"
 
 #define MAX_PARAMS 32
 #define MAX_PARAM_LENGTH 16
@@ -145,6 +146,35 @@ static void print_uint(uint32_t value) {
     while (i > 0) printchar(digits[--i]);
 }
 
+static void print_int(int value) {
+    if (value < 0) {
+        printchar('-');
+        print_uint((uint32_t)(-value));
+        return;
+    }
+    print_uint((uint32_t)value);
+}
+
+static int join_params(char **params, int start, int count, char *out, unsigned long out_size) {
+    int i;
+    unsigned long pos = 0;
+
+    for (i = start; i < count; i++) {
+        unsigned long j = 0;
+        if (i > start) {
+            if (pos + 1 >= out_size) return -1;
+            out[pos++] = ' ';
+        }
+        while (params[i][j] != '\0') {
+            if (pos + 1 >= out_size) return -1;
+            out[pos++] = params[i][j++];
+        }
+    }
+
+    out[pos] = '\0';
+    return 0;
+}
+
 static void print_ls_entry(const FsDirEntry *entry, void *ctx) {
     (void)ctx;
     printchar('\n');
@@ -163,15 +193,17 @@ static void print_ls_entry(const FsDirEntry *entry, void *ctx) {
 
 static void print_command_list() {
     printstr("\nclear - Clears the terminal screen; usage: clear");
-    printstr("\ncd - Changes the current directory for relative paths; usage: cd [PATH]");
-    printstr("\nmkdir - Creates a new FAT32 directory; usage: mkdir PATH");
-    printstr("\nrm - Removes a file; usage: rm PATH");
-    printstr("\nrmdir - Recursively removes a directory and all of its contents; usage: rmdir PATH");
+    printstr("\ncd - Changes the current directory for relative paths; usage: cd <PATH>");
+    printstr("\nmkdir - Creates a new FAT32 directory; usage: mkdir <PATH>");
+    printstr("\nrm - Removes a file; usage: rm <PATH>");
+    printstr("\nrmdir - Recursively removes a directory and all of its contents; usage: rmdir <PATH>");
     printstr("\npwd - Prints the current working directory; usage: pwd");
-    printstr("\ncat/read - Prints a file's contents; usage: cat PATH");
-    printstr("\nwrite - Creates or replaces a file with text; usage: write PATH TEXT");
-    printstr("\nappend - Adds text to the end of a file; usage: append PATH TEXT");
-    printstr("\nls - Lists files and directories in a FAT32 directory; usage: ls [PATH]");
+    printstr("\ncat/read - Prints a file's contents; usage: cat <PATH>");
+    printstr("\nwrite - Creates or replaces a file with text; usage: write <PATH> <TEXT>");
+    printstr("\nappend - Adds text to the end of a file; usage: append <PATH> <TEXT>");
+    printstr("\ncalc - Evaluates an integer arithmetic expression; usage: calc <EXPR>");
+    printstr("\nls - Lists files and directories in a FAT32 directory; usage: ls <PATH>");
+    printstr("\nexec - executes file as if each line seperated with a semicolon was ran in the termina; usage: exec <PATH>");
     printstr("\nlscmd - Lists available shell commands with usage; usage: lscmd");
     printstr("\nexit/quit - Shuts down the kernel shell; usage: exit");
 }
@@ -342,6 +374,27 @@ int execute(char* cmd) {
         if (i < param_count) printstr("\nwrite: write failed");
         return 0;
     }
+    if (strcmp(exec_command, "calc")) {
+        char expression[128];
+        int result;
+
+        if (param_count < 2) {
+            printstr("\nusage: calc EXPR");
+            return 0;
+        }
+        if (join_params(params, 1, param_count, expression, sizeof(expression)) != 0) {
+            printstr("\ncalc: expression too long");
+            return 0;
+        }
+        if (!calc(expression, &result)) {
+            printstr("\ncalc: invalid expression");
+            return 0;
+        }
+
+        printchar('\n');
+        print_int(result);
+        return 0;
+    }
     if (strcmp(exec_command, "tree")) {
         char path[MAX_PATH_LENGTH];
         const char *target = param_count >= 2 ? params[1] : ".";
@@ -354,6 +407,25 @@ int execute(char* cmd) {
 
         if (fs_tree(path) != 0) {
             printstr("\ntree: directory open failed");
+        }
+
+        return 0;
+    }
+    if (strcmp(exec_command, "exec")) {
+        if (param_count < 2) {
+            printstr("\nexec: path not provided");
+            return 0;
+        }
+        const char *target = params[1];
+
+        char path[MAX_PATH_LENGTH];
+        if (normalize_path(target, path) != 0) {
+            printstr("\ntree: path too long");
+            return 0;
+        }
+
+        if (exec(path) != 0) {
+            printstr("\nexec: execution failed");
         }
 
         return 0;

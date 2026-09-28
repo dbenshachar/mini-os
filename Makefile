@@ -8,7 +8,7 @@ HOSTCC ?= cc
 CFLAGS = -ffreestanding -fno-pic -Iinclude -Isrc -c
 LDFLAGS = -nostdlib -T linker.ld
 
-SRCS = $(wildcard src/*.c) kernel.c
+SRCS = $(wildcard src/*.c) $(wildcard src/program/*.c) kernel.c
 OBJS = out/start.o $(patsubst %.c,out/%.o,$(SRCS))
 
 all: run
