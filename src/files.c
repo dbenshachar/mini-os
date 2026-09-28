@@ -1,5 +1,6 @@
 #include "files.h"
 #include "mmio.h"
+#include "io.h"
 
 #define FAT_ATTR_DIRECTORY 0x10
 #define FAT_ATTR_ARCHIVE 0x20
@@ -990,4 +991,75 @@ int fs_list(const char *path, void (*emit)(const FsDirEntry *entry, void *ctx), 
         if (is_eoc(next)) return 0;
         cluster = next;
     }
+}
+
+/* Prints two spaces per tree depth level to indent nested entries. */
+static void print_indent(int depth) {
+    int i;
+    for (i = 0; i < depth; i++) {
+        printstr("  ");
+    }
+}
+
+/* Loops through all directories in path to display entire folder structure. */
+static int tree_dir(uint32_t dir_cluster, int depth) {
+    uint32_t cluster = dir_cluster;
+    uint32_t next;
+    uint8_t s;
+    uint16_t off;
+
+    while (1) {
+        for (s = 0; s < volume.sectors_per_cluster; s++) {
+            uint32_t sector = cluster_to_sector(cluster) + s;
+
+            if (read_sector(sector, scratch) != 0) return -1;
+
+            for (off = 0; off < FS_SECTOR_SIZE; off += 32) {
+                char name[13];
+                uint8_t first = scratch[off];
+                uint8_t attr = scratch[off + 11];
+                uint32_t child_cluster;
+
+                if (first == 0x00) return 0;
+                if (first == 0xe5) continue;
+                if (first == '.') continue;
+                if (attr == FAT_ATTR_LONG_NAME) continue;
+                if (attr & FAT_ATTR_VOLUME_ID) continue;
+
+                format_entry_name(&scratch[off], name);
+                print_indent(depth);
+                printstr(name);
+
+                if (attr & FAT_ATTR_DIRECTORY) {
+                    printstr("/\n");
+
+                    child_cluster = entry_first_cluster(&scratch[off]);
+                    if (child_cluster >= 2) {
+                        if (tree_dir(child_cluster, depth + 1) != 0) {
+                            return -1;
+                        }
+                    }
+                } else {
+                    printchar('\n');
+                }
+            }
+        }
+
+        if (fat_get(cluster, &next) != 0) return -1;
+        if (is_eoc(next)) return 0;
+
+        cluster = next;
+    }
+}
+
+/* Validates path and calls helper function to list all directories recursively in a path. */
+int fs_tree(const char *path) {
+    uint32_t cluster;
+
+    if (!volume.mounted) return -1;
+    if (resolve_directory(path, &cluster) != 0) return -1;
+
+    printstr(path);
+    printchar('\n');
+    return tree_dir(cluster, 0);
 }

@@ -168,7 +168,7 @@ static void print_command_list() {
     printstr("\nrm - Removes a file; usage: rm PATH");
     printstr("\nrmdir - Recursively removes a directory and all of its contents; usage: rmdir PATH");
     printstr("\npwd - Prints the current working directory; usage: pwd");
-    printstr("\ncat - Prints a file's contents; usage: cat PATH");
+    printstr("\ncat/read - Prints a file's contents; usage: cat PATH");
     printstr("\nwrite - Creates or replaces a file with text; usage: write PATH TEXT");
     printstr("\nappend - Adds text to the end of a file; usage: append PATH TEXT");
     printstr("\nls - Lists files and directories in a FAT32 directory; usage: ls [PATH]");
@@ -283,7 +283,7 @@ int execute(char* cmd) {
         }
         return 0;
     }
-    if (strcmp(exec_command, "cat")) {
+    if (strcmp(exec_command, "cat") || strcmp(exec_command, "read")) {
         char buffer[129];
         long n;
         int fd;
@@ -340,6 +340,22 @@ int execute(char* cmd) {
         }
         sys_close(fd);
         if (i < param_count) printstr("\nwrite: write failed");
+        return 0;
+    }
+    if (strcmp(exec_command, "tree")) {
+        char path[MAX_PATH_LENGTH];
+        const char *target = param_count >= 2 ? params[1] : ".";
+
+        
+        if (normalize_path(target, path) != 0) {
+            printstr("\ntree: path too long");
+            return 0;
+        }
+
+        if (fs_tree(path) != 0) {
+            printstr("\ntree: directory open failed");
+        }
+
         return 0;
     }
 

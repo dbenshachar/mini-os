@@ -28,5 +28,6 @@ int fs_list(const char *path, void (*emit)(const FsDirEntry *entry, void *ctx), 
 int fs_mkdir(const char *path);
 int fs_remove(const char *path);
 int fs_rmdir(const char *path);
+int fs_tree(const char *path);
 
 #endif

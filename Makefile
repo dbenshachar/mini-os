@@ -44,6 +44,7 @@ run: kernel.bin
 	   -device virtio-blk-device,drive=hd0
 
 clean:
-	rm -rf out/ kernel.elf kernel.bin
+	rm -rf out/ kernel.elf kernel.bin clean_usage
+	lsof -t disk.img | xargs kill -9
 
 .PHONY: all run format-disk test clean
