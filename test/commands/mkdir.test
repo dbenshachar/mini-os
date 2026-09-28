@@ -1,0 +1,15 @@
+# mkdir creates a directory, rejects duplicates, and rejects missing parents.
+COMMANDS
+mkdir MADE
+ls
+mkdir MADE
+mkdir MISSING/SUB
+cd MADE
+pwd
+exit
+
+EXPECT
+[DIR]        MADE/
+mkdir: create failed
+\n/MADE\n> exit
+Shutting down...

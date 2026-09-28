@@ -1,0 +1,17 @@
+# rmdir recursively removes directories, rejects missing dirs, and rejects files.
+COMMANDS
+mkdir TREE
+mkdir TREE/SUB
+write TREE/SUB/NEST.TXT nested
+ls TREE/SUB
+rmdir TREE
+cd TREE
+rmdir NOPE
+rmdir TEST.TXT
+exit
+
+EXPECT
+[FILE]       NEST.TXT    6 bytes
+cd: directory open failed
+rmdir: remove failed
+Shutting down...

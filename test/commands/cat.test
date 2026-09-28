@@ -1,0 +1,13 @@
+# cat root file, relative nested file, and missing file.
+COMMANDS
+cat TEST.TXT
+cd DIR
+cat FILE.TXT
+cat MISSING.TXT
+exit
+
+EXPECT
+Hello from MINI_OS FAT32.
+Nested FAT32 reads work.
+cat: open failed
+Shutting down...

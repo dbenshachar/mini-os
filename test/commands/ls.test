@@ -1,0 +1,13 @@
+# ls root, nested directory, and missing directory.
+COMMANDS
+ls
+ls DIR
+ls NOPE
+exit
+
+EXPECT
+[FILE]       TEST.TXT    26 bytes
+[DIR]        DIR/
+[FILE]       FILE.TXT    25 bytes
+ls: directory open failed
+Shutting down...

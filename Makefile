@@ -3,6 +3,7 @@ CC = aarch64-elf-gcc
 LD = aarch64-elf-ld
 OBJCOPY = aarch64-elf-objcopy
 QEMU = qemu-system-aarch64
+HOSTCC ?= cc
 
 CFLAGS = -ffreestanding -fno-pic -Iinclude -Isrc -c
 LDFLAGS = -nostdlib -T linker.ld
@@ -10,7 +11,7 @@ LDFLAGS = -nostdlib -T linker.ld
 SRCS = $(wildcard src/*.c) kernel.c
 OBJS = out/start.o $(patsubst %.c,out/%.o,$(SRCS))
 
-all: kernel.bin
+all: run
 
 kernel.bin: kernel.elf
 	$(OBJCOPY) -O binary kernel.elf kernel.bin
@@ -26,6 +27,16 @@ out/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $< -o $@
 
+out/mkfat32: tools/mkfat32.c
+	@mkdir -p $(dir $@)
+	$(HOSTCC) -std=c99 -Wall -Wextra -o $@ $<
+
+format-disk: out/mkfat32
+	./out/mkfat32 disk.img
+
+test:
+	bash test/test.sh
+
 run: kernel.bin
 	$(QEMU) -M virt -cpu cortex-a57 -nographic -serial mon:stdio \
 	   -kernel kernel.elf \
@@ -35,4 +46,4 @@ run: kernel.bin
 clean:
 	rm -rf out/ kernel.elf kernel.bin
 
-.PHONY: all run clean
+.PHONY: all run format-disk test clean

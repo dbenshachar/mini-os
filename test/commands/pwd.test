@@ -1,0 +1,14 @@
+# pwd at root, after cd, and after cd .. normalization.
+COMMANDS
+pwd
+cd DIR
+pwd
+cd ..
+pwd
+exit
+
+EXPECT
+\n/\n> cd DIR
+\n/DIR\n> cd ..
+\n/\n> exit
+Shutting down...

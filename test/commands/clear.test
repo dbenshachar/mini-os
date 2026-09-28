@@ -1,0 +1,10 @@
+# clear should emit the ANSI clear/home sequence during boot and on demand.
+COMMANDS
+clear
+pwd
+exit
+
+EXPECT
+\x1b[2J\x1b[H
+\n/\n> exit
+Shutting down...

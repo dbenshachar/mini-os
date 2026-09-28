@@ -1,0 +1,15 @@
+# append existing file, create missing file, and fail on missing parent.
+COMMANDS
+write NOTE.TXT base
+append NOTE.TXT plus
+cat NOTE.TXT
+append NEWAPP.TXT fresh
+cat NEWAPP.TXT
+append MISSING/NO.TXT nope
+exit
+
+EXPECT
+baseplus
+fresh
+write: open failed
+Shutting down...

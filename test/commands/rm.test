@@ -1,0 +1,15 @@
+# rm removes files, rejects directories, and rejects missing files.
+COMMANDS
+write TEMP.TXT bye
+ls
+rm TEMP.TXT
+cat TEMP.TXT
+rm DIR
+rm NOFILE.TXT
+exit
+
+EXPECT
+[FILE]       TEMP.TXT    3 bytes
+cat: open failed
+rm: remove failed
+Shutting down...

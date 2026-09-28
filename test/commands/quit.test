@@ -1,0 +1,6 @@
+# quit is an alias for exit.
+COMMANDS
+quit
+
+EXPECT
+Shutting down...

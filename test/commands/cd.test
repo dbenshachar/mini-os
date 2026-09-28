@@ -1,0 +1,17 @@
+# cd relative, cd home/default, and fail on a missing directory.
+COMMANDS
+pwd
+cd DIR
+pwd
+cat FILE.TXT
+cd
+pwd
+cd NOPE
+exit
+
+EXPECT
+\n/\n> cd DIR
+\n/DIR\n> cat FILE.TXT
+\n/\n> cd NOPE
+cd: directory open failed
+Shutting down...

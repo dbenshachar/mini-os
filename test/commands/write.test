@@ -1,0 +1,14 @@
+# write creates files, truncates files, and fails on missing parents.
+COMMANDS
+write NOTE.TXT hello
+cat NOTE.TXT
+write NOTE.TXT replacement
+cat NOTE.TXT
+write MISSING/NO.TXT nope
+exit
+
+EXPECT
+hello
+replacement
+write: open failed
+Shutting down...

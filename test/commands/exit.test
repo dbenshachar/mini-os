@@ -1,0 +1,6 @@
+# exit shuts down the shell.
+COMMANDS
+exit
+
+EXPECT
+Shutting down...
