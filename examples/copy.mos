@@ -1,0 +1,31 @@
+# Stream a file in chunks. Paths use the existing FAT32 8.3 naming rules.
+fn copy_file(source, target) {
+    let input = open(source, O_RDONLY);
+    let output = open(target, O_WRONLY + O_CREAT + O_TRUNC);
+    if (input < 0 || output < 0) {
+        if (input >= 0) { close(input); }
+        if (output >= 0) { close(output); }
+        return -1;
+    }
+    let buffer = malloc(128);
+    let n = read(input, buffer, len(buffer));
+    let total = 0;
+    while (n > 0) {
+        let written = write(output, buffer, n);
+        if (written != n) {
+            free(buffer);
+            close(input);
+            close(output);
+            return -1;
+        }
+        total = total + n;
+        n = read(input, buffer, len(buffer));
+    }
+    free(buffer);
+    close(input);
+    close(output);
+    if (n < 0) { return -1; }
+    return total;
+}
+print("copied=", copy_file("/TEST.TXT", "/COPY.TXT"));
+cat /COPY.TXT;

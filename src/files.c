@@ -769,7 +769,6 @@ long fs_read(int fd, void *buf, unsigned long count) {
  * clusters are allocated as needed and the directory entry size is updated.
  */
 long fs_write(int fd, const void *buf, unsigned long count) {
-    return 0;
     OpenFile *file;
     const uint8_t *in = (const uint8_t *)buf;
     unsigned long done = 0;

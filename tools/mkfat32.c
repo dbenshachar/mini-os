@@ -118,7 +118,58 @@ static void write_file_content(uint8_t *img, uint32_t fat_sectors, uint32_t clus
     memcpy(sector, text, strlen(text));
 }
 
-static int write_image(const char *path) {
+/* Add host files to the root of this newly formatted volume. */
+static int import_files(uint8_t *img, uint32_t fat_sectors, int count, char **paths) {
+    uint32_t next_cluster = 6;
+    uint32_t clusters = TOTAL_SECTORS - first_data_sector(fat_sectors);
+    uint8_t *root = img + cluster_sector(fat_sectors, ROOT_CLUSTER) * SECTOR_SIZE;
+    if (count > 14) { fprintf(stderr, "at most 14 imported files fit in the root directory\n"); return 1; }
+    for (int i = 0; i < count; i++) {
+        const char *base = strrchr(paths[i], '/');
+        base = base ? base + 1 : paths[i];
+        const char *dot = strrchr(base, '.');
+        size_t stem = dot ? (size_t)(dot - base) : strlen(base);
+        size_t ext = dot ? strlen(dot + 1) : 0;
+        char short_name[11];
+        memset(short_name, ' ', sizeof(short_name));
+        if (!stem || stem > 8 || ext > 3) { fprintf(stderr, "not an 8.3 filename: %s\n", base); return 1; }
+        for (size_t j = 0; j < stem + ext; j++) {
+            char ch = j < stem ? base[j] : dot[1 + j - stem];
+            if (ch >= 'a' && ch <= 'z') ch -= 'a' - 'A';
+            if (!((ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '_' || ch == '-')) {
+                fprintf(stderr, "unsupported filename: %s\n", base); return 1;
+            }
+            short_name[j < stem ? j : 8 + j - stem] = ch;
+        }
+        for (int j = 0; j < i + 2; j++) if (!memcmp(root + j * 32, short_name, 11)) {
+            fprintf(stderr, "duplicate filename: %s\n", base); return 1;
+        }
+        FILE *input = fopen(paths[i], "rb");
+        if (!input) { perror(paths[i]); return 1; }
+        if (fseek(input, 0, SEEK_END)) { fclose(input); return 1; }
+        long size = ftell(input);
+        if (size < 0 || fseek(input, 0, SEEK_SET)) { fclose(input); return 1; }
+        uint32_t needed = size ? (uint32_t)(((unsigned long)size + 511) / 512) : 0;
+        if ((unsigned long)size > IMAGE_BYTES || needed > clusters + 2 - next_cluster) {
+            fprintf(stderr, "file does not fit: %s\n", paths[i]); fclose(input); return 1;
+        }
+        make_entry(root + (i + 2) * 32, short_name, 0x20, needed ? next_cluster : 0, (uint32_t)size);
+        for (uint32_t j = 0; j < needed; j++) {
+            uint32_t cluster = next_cluster + j;
+            fat_put(img, fat_sectors, cluster, j + 1 == needed ? EOC : cluster + 1);
+            size_t bytes = (unsigned long)size - (unsigned long)j * 512;
+            if (bytes > 512) bytes = 512;
+            if (fread(img + cluster_sector(fat_sectors, cluster) * SECTOR_SIZE, 1, bytes, input) != bytes) {
+                fclose(input); return 1;
+            }
+        }
+        fclose(input);
+        next_cluster += needed;
+    }
+    return 0;
+}
+
+static int write_image(const char *path, int file_count, char **paths) {
     uint32_t fat_sectors = fat_sectors_for_image();
     uint8_t *img = calloc(1, IMAGE_BYTES);
     FILE *file;
@@ -149,6 +200,7 @@ static int write_image(const char *path) {
     write_file_content(img, fat_sectors, 3, root_text);
     write_file_content(img, fat_sectors, 5, nested_text);
 
+    if (import_files(img, fat_sectors, file_count, paths)) { free(img); return 1; }
     file = fopen(path, "wb");
     if (!file) {
         free(img);
@@ -166,9 +218,9 @@ static int write_image(const char *path) {
 }
 
 int main(int argc, char **argv) {
-    if (argc != 2) {
-        fprintf(stderr, "usage: %s disk.img\n", argv[0]);
+    if (argc < 2) {
+        fprintf(stderr, "usage: %s disk.img [host-file ...]\n", argv[0]);
         return 2;
     }
-    return write_image(argv[1]);
+    return write_image(argv[1], argc - 2, argv + 2);
 }

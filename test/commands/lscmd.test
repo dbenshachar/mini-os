@@ -5,6 +5,6 @@ exit
 
 EXPECT
 clear - Clears the terminal screen; usage: clear
-rm - Removes a file; usage: rm PATH
-rmdir - Recursively removes a directory and all of its contents; usage: rmdir PATH
+rm - Removes a file; usage: rm <PATH>
+rmdir - Recursively removes a directory and all of its contents; usage: rmdir <PATH>
 Shutting down...

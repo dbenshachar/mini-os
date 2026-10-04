@@ -6,6 +6,6 @@ SECTIONS{
   .data : { *(.data*) }
   .bss  : { *(.bss*) *(COMMON) }
   . = ALIGN(16);
-  . += 0x4000;                    /* 16 KiB stack */
+  . += 0x20000;                   /* 128 KiB stack for bounded interpreter calls */
   stack_top = .;
 }

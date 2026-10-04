@@ -1,0 +1,38 @@
+# Functions are text expansions with scoped argument substitutions.
+fn square(n) { return n * n; }
+fn factorial(n) {
+    if (n <= 1) { return 1; }
+    return n * factorial(n - 1);
+}
+let path = "/TEST.TXT";
+let values = [square(3), "hello", [1, 2]];
+values[2][1] = 7;
+print(values[0]);
+print(values[1][0]);
+print(values[2][1]);
+print(factorial(5));
+let total = 0;
+let i = 4;
+while (i) {
+    let increment = i;
+    total = total + increment;
+    i = i - 1;
+}
+if (total) { print("sum=", total); } else { print("zero"); }
+if (0) { print("wrong branch"); } else { print("else works"); }
+print(0 && (1 / 0));
+print(1 || missing_function());
+let bytes = malloc(3);
+bytes[0] = 65;
+bytes[1] = 0;
+bytes[2] = 90;
+print(bytes[0] + bytes[2]);
+let alias = bytes;
+free(alias);
+let slots = array(4);
+slots[3] = "array works";
+print(slots[3]);
+free(slots);
+# Existing shell commands accept substitutions.
+cat $path;
+while 2; calc 7;

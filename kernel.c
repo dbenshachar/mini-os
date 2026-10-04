@@ -56,7 +56,6 @@ void kmain(void){
         const char c = readchar();
         if (c == '\n' || c == '\r') {
             cmdbuffer[cmdlen] = '\0';
-            cmdlen++;
 
             int done = execute(cmdbuffer);
             if (done) { printstr("\nShutting down...\n"); return; }
@@ -69,6 +68,7 @@ void kmain(void){
             printstr("\b \b");
             continue;
         }
+        if (cmdlen >= sizeof(cmdbuffer) - 1) continue;
         cmdbuffer[cmdlen] = c;
         cmdlen++;
         printchar((long) c);

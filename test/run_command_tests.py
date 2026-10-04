@@ -27,7 +27,7 @@ def parse_case(path):
     return sections
 
 
-def run_os(root, disk, commands, timeout=20):
+def run_os(root, disk, commands, timeout=20, modern=False):
     qemu = os.environ.get("QEMU", "qemu-system-aarch64")
     kernel = os.path.join(root, "kernel.elf")
     proc = subprocess.Popen(
@@ -40,6 +40,9 @@ def run_os(root, disk, commands, timeout=20):
             "-kernel", kernel,
             "-drive", f"if=none,file={disk},format=raw,id=hd0",
             "-device", "virtio-blk-device,drive=hd0",
+            "-netdev", "user,id=net0",
+            "-device", "virtio-net-device,netdev=net0",
+            *(["-global", "virtio-mmio.force-legacy=false"] if modern else []),
         ],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,

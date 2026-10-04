@@ -204,7 +204,7 @@ static void print_command_list() {
     printstr("\nappend - Adds text to the end of a file; usage: append <PATH> <TEXT>");
     printstr("\ncalc - Evaluates an integer arithmetic expression; usage: calc <EXPR>");
     printstr("\nls - Lists files and directories in a FAT32 directory; usage: ls <PATH>");
-    printstr("\nexec - executes file as if each line seperated with a semicolon was ran in the termina; usage: exec <PATH>");
+    printstr("\nexec - Runs a script (variables, functions, arrays, buffers, TCP); usage: exec <PATH>");
     printstr("\nlscmd - Lists available shell commands with usage; usage: lscmd");
     printstr("\nexit/quit - Shuts down the kernel shell; usage: exit");
 }
